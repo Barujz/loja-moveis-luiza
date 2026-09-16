@@ -1,26 +1,110 @@
 @import "tailwindcss";
 
+/* ------------------------------------------------------------------ *
+ * Design tokens — paleta de luxo / hotelaria
+ * Fáceis de ajustar: mude aqui e o site inteiro acompanha.
+ * ------------------------------------------------------------------ */
+@theme {
+  /* Cores */
+  --color-cream: #f6f2ea; /* fundo principal, marfim quente */
+  --color-paper: #fbf9f4; /* cartões / superfícies */
+  --color-ink: #1b1a17; /* texto principal, quase-preto quente */
+  --color-muted: #6e6659; /* texto secundário */
+  --color-brass: #a9834f; /* acento — latão/dourado */
+  --color-brass-dark: #8a6a3d; /* hover do acento */
+  --color-forest: #33413a; /* acento secundário — verde profundo */
+  --color-line: #e6dfd1; /* bordas / divisórias */
+
+  /* Tipografia */
+  --font-display: var(--font-cormorant), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-jost), ui-sans-serif, system-ui, sans-serif;
+
+  /* Container */
+  --spacing-gutter: 1.25rem;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: var(--color-cream);
+  --foreground: var(--color-ink);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* {
+  border-color: var(--color-line);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Títulos usam a serifada por padrão */
+h1, h2, h3, h4, .font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+/* Utilitário: kicker/eyebrow em maiúsculas espaçadas */
+.eyebrow {
+  font-family: var(--font-sans);
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--color-brass);
+}
+
+/* Link com sublinhado animado */
+.link-underline {
+  position: relative;
+}
+.link-underline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  height: 1px;
+  width: 100%;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.link-underline:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+/* Animação de entrada ao rolar (usada pelo componente Reveal) */
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.reveal {
+  opacity: 0;
+}
+.reveal.is-visible {
+  animation: reveal-up 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .reveal {
+    opacity: 1;
+    animation: none;
+  }
 }
