@@ -1,77 +1,74 @@
-"use client";
-
-import { useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { categories, getAllProducts, type CategorySlug } from "@/lib/products";
-import { ProductCard } from "@/components/product/ProductCard";
+import Link from "next/link";
+import type { ShowcaseCatalog } from "@/lib/catalog/showcase";
+import { visibilityLabel } from "@/lib/supplier/labels";
+import { fieldClass } from "@/components/auth/AuthFields";
 import { cn } from "@/lib/cn";
 
-type Filter = CategorySlug | "todos";
-
-export function CatalogGrid({ initialCategory }: { initialCategory: Filter }) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [active, setActive] = useState<Filter>(initialCategory);
-
-  const all = getAllProducts();
-  const filtered = useMemo(
-    () => (active === "todos" ? all : all.filter((p) => p.category === active)),
-    [active, all],
-  );
-
-  function selectFilter(f: Filter) {
-    setActive(f);
-    const params = new URLSearchParams(searchParams.toString());
-    if (f === "todos") params.delete("categoria");
-    else params.set("categoria", f);
+export function CatalogGrid({
+  catalogs,
+  categories,
+  active,
+  query,
+}: {
+  catalogs: ShowcaseCatalog[];
+  categories: { slug: string; name: string }[];
+  active: string;
+  query: string;
+}) {
+  function href(category: string | null) {
+    const params = new URLSearchParams();
+    if (category) params.set("categoria", category);
+    if (query) params.set("q", query);
     const qs = params.toString();
-    router.replace(qs ? `/catalogo?${qs}` : "/catalogo", { scroll: false });
+    return qs ? `/catalogo?${qs}` : "/catalogo";
   }
 
-  const filters: { slug: Filter; name: string }[] = [
-    { slug: "todos", name: "Todos" },
-    ...categories.map((c) => ({ slug: c.slug, name: c.name })),
-  ];
+  const filters = [{ slug: "", name: "Todos" }, ...categories];
 
   return (
     <div>
-      {/* Filtros */}
       <div className="flex flex-wrap gap-2.5">
-        {filters.map((f) => (
-          <button
-            key={f.slug}
-            type="button"
-            onClick={() => selectFilter(f.slug)}
-            className={cn(
-              "rounded-full border px-5 py-2.5 text-sm transition-all duration-300",
-              active === f.slug
-                ? "border-ink bg-ink text-cream"
-                : "border-line text-ink hover:border-brass hover:text-brass",
-            )}
-          >
-            {f.name}
-          </button>
-        ))}
+        {filters.map((filter) => {
+          const selected = (filter.slug || "todos") === active;
+          return (
+            <Link
+              key={filter.slug || "todos"}
+              href={href(filter.slug || null)}
+              className={cn(
+                "rounded-full border px-5 py-2.5 text-sm transition-all duration-300",
+                selected ? "border-ink bg-ink text-cream" : "border-line text-ink hover:border-brass hover:text-brass",
+              )}
+            >
+              {filter.name}
+            </Link>
+          );
+        })}
       </div>
 
-      {/* Contagem */}
+      <form action="/catalogo" className="mt-6 max-w-xl">
+        {active !== "todos" ? <input type="hidden" name="categoria" value={active} /> : null}
+        <input className={fieldClass} type="search" name="q" defaultValue={query} placeholder="Buscar por título ou descrição" />
+      </form>
+
       <p className="mt-8 text-sm text-muted">
-        {filtered.length}{" "}
-        {filtered.length === 1 ? "peça encontrada" : "peças encontradas"}
+        {catalogs.length} {catalogs.length === 1 ? "catálogo encontrado" : "catálogos encontrados"}
       </p>
 
-      {/* Grade */}
-      <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-10 lg:grid-cols-3">
-        {filtered.map((product) => (
-          <ProductCard key={product.slug} product={product} />
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {catalogs.map((catalog) => (
+          <Link key={catalog.id} href={`/catalogo/${catalog.id}`} className="group block rounded-sm border border-line bg-paper p-6">
+            <p className="text-[11px] uppercase tracking-[0.18em] text-muted">{catalog.categoryName}</p>
+            <h2 className="mt-2 font-display text-2xl text-ink transition-colors group-hover:text-brass">{catalog.title}</h2>
+            <p className="mt-3 line-clamp-3 text-sm text-muted">{catalog.description?.trim() || "Catálogo publicado."}</p>
+            <p className="mt-4 text-sm text-brass">
+              {visibilityLabel[catalog.visibility]}
+              {catalog.supplierName ? ` · ${catalog.supplierName}` : ""}
+            </p>
+          </Link>
         ))}
       </div>
 
-      {filtered.length === 0 && (
-        <p className="py-20 text-center text-muted">
-          Nenhuma peça nesta categoria por enquanto.
-        </p>
-      )}
+      {catalogs.length === 0 ? <p className="py-20 text-center text-muted">Nenhum catálogo publicado nesta seleção.</p> : null}
     </div>
   );
 }

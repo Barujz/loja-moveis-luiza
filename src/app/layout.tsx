@@ -4,6 +4,7 @@ import "./globals.css";
 import { site } from "@/lib/site";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { getAccount } from "@/lib/auth/account";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -37,13 +38,15 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const account = await getAccount();
+
   return (
     <html lang="pt-BR" className={`${cormorant.variable} ${jost.variable}`}>
       <body className="flex min-h-screen flex-col bg-cream text-ink">
-        <Header />
+        <Header signedIn={Boolean(account)} />
         <main className="flex-1">{children}</main>
         <Footer />
       </body>

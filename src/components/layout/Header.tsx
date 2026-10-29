@@ -7,8 +7,11 @@ import { Menu, X } from "lucide-react";
 import { mainNav, site, whatsappLink } from "@/lib/site";
 import { Container } from "@/components/ui/Container";
 import { cn } from "@/lib/cn";
+import { logout } from "@/lib/auth/actions";
 
-export function Header() {
+const commercialWhatsapp = whatsappLink("Olá, gostaria de falar com a Luiza.");
+
+export function Header({ signedIn = false }: { signedIn?: boolean }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -50,7 +53,7 @@ export function Header() {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-9 md:flex">
+        <nav className="hidden items-center gap-7 xl:flex">
           {mainNav.map((item) => {
             const active =
               item.href === "/"
@@ -61,7 +64,7 @@ export function Header() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "link-underline text-sm tracking-wide transition-colors",
+                  "link-underline whitespace-nowrap text-sm tracking-wide transition-colors",
                   active ? "text-brass" : "text-ink hover:text-brass",
                 )}
               >
@@ -71,17 +74,34 @@ export function Header() {
           })}
         </nav>
 
-        <div className="hidden md:block">
-          <a
-            href={whatsappLink(
-              "Olá! Gostaria de solicitar um orçamento de mobiliário.",
-            )}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center rounded-full bg-ink px-6 py-3 text-sm font-medium text-cream transition-colors duration-300 hover:bg-brass"
-          >
-            Solicitar orçamento
-          </a>
+        <div className="hidden items-center gap-5 xl:flex">
+          {signedIn ? (
+            <>
+              <Link href="/conta" className="text-sm tracking-wide text-ink hover:text-brass">
+                Conta
+              </Link>
+              <form action={logout}>
+                <button type="submit" className="text-sm tracking-wide text-ink hover:text-brass">
+                  Sair
+                </button>
+              </form>
+            </>
+          ) : (
+            <Link href="/entrar" className="text-sm tracking-wide text-ink hover:text-brass">
+              Entrar
+            </Link>
+          )}
+          {commercialWhatsapp ? (
+            <a
+              href={commercialWhatsapp}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm tracking-wide text-ink hover:text-brass"
+            >
+              WhatsApp
+            </a>
+          ) : null}
+          <CatalogEntry className="inline-flex items-center rounded-full bg-ink px-6 py-3 text-sm font-medium text-cream transition-colors duration-300 hover:bg-brass" />
         </div>
 
         <button
@@ -89,7 +109,7 @@ export function Header() {
           onClick={() => setOpen((v) => !v)}
           aria-label={open ? "Fechar menu" : "Abrir menu"}
           aria-expanded={open}
-          className="text-ink md:hidden"
+          className="text-ink xl:hidden"
         >
           {open ? <X size={26} /> : <Menu size={26} />}
         </button>
@@ -98,7 +118,7 @@ export function Header() {
       {/* Menu mobile */}
       <div
         className={cn(
-          "fixed inset-x-0 top-20 bottom-0 z-40 origin-top bg-cream transition-all duration-300 md:hidden",
+          "fixed inset-x-0 top-20 bottom-0 z-40 origin-top bg-cream transition-all duration-300 xl:hidden",
           open
             ? "pointer-events-auto opacity-100"
             : "pointer-events-none opacity-0",
@@ -115,19 +135,40 @@ export function Header() {
                 {item.label}
               </Link>
             ))}
+            <Link href={signedIn ? "/conta" : "/entrar"} className="border-b border-line py-4 font-display text-3xl text-ink">
+              {signedIn ? "Conta" : "Entrar"}
+            </Link>
           </nav>
-          <a
-            href={whatsappLink(
-              "Olá! Gostaria de solicitar um orçamento de mobiliário.",
-            )}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-8 inline-flex items-center justify-center rounded-full bg-ink px-6 py-4 text-sm font-medium text-cream"
-          >
-            Solicitar orçamento
-          </a>
+          <div className="mt-8 flex flex-col gap-4">
+            {signedIn ? (
+              <form action={logout}>
+                <button type="submit" className="text-sm text-ink underline underline-offset-4">
+                  Sair
+                </button>
+              </form>
+            ) : null}
+            {commercialWhatsapp ? (
+              <a
+                href={commercialWhatsapp}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-ink underline underline-offset-4"
+              >
+                WhatsApp
+              </a>
+            ) : null}
+            <CatalogEntry className="inline-flex items-center justify-center rounded-full bg-ink px-6 py-4 text-sm font-medium text-cream" />
+          </div>
         </Container>
       </div>
     </header>
+  );
+}
+
+function CatalogEntry({ className }: { className: string }) {
+  return (
+    <Link href="/catalogo" className={cn(className, "whitespace-nowrap")}>
+      Ver catálogos
+    </Link>
   );
 }

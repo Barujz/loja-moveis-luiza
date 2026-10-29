@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { Mail, Phone, MapPin } from "lucide-react";
-import { categories } from "@/lib/products";
-import { mainNav, site } from "@/lib/site";
+import { Mail, MessageCircle, Phone, MapPin } from "lucide-react";
+import { catalogCategories, loadPublicCatalogs } from "@/lib/catalog/showcase";
+import { mainNav, site, whatsappLink } from "@/lib/site";
 import { Container } from "@/components/ui/Container";
 
 function InstagramIcon({ size = 20 }: { size?: number }) {
@@ -24,8 +24,20 @@ function LinkedinIcon({ size = 20 }: { size?: number }) {
   );
 }
 
-export function Footer() {
+export async function Footer() {
   const year = new Date().getFullYear();
+  const categories = catalogCategories(await loadPublicCatalogs());
+  const socials = [
+    site.social.instagram ? { href: site.social.instagram, label: "Instagram", icon: InstagramIcon } : null,
+    site.social.linkedin ? { href: site.social.linkedin, label: "LinkedIn", icon: LinkedinIcon } : null,
+  ].filter((item) => item !== null);
+  const whatsapp = whatsappLink("Olá, gostaria de falar com a Luiza.");
+  const contacts = [
+    site.address ? { icon: MapPin, text: site.address, href: null as string | null, external: false } : null,
+    site.phone ? { icon: Phone, text: site.phone, href: `tel:${site.phone.replace(/[^\d+]/g, "")}`, external: false } : null,
+    site.email ? { icon: Mail, text: site.email, href: `mailto:${site.email}`, external: false } : null,
+    whatsapp ? { icon: MessageCircle, text: site.whatsapp, href: whatsapp, external: true } : null,
+  ].filter((item) => item !== null);
 
   return (
     <footer className="mt-24 bg-ink text-cream/80">
@@ -39,26 +51,22 @@ export function Footer() {
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-cream/60">
               {site.description}
             </p>
-            <div className="mt-6 flex gap-4">
-              <a
-                href={site.social.instagram}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Instagram"
-                className="text-cream/60 transition-colors hover:text-brass"
-              >
-                <InstagramIcon size={20} />
-              </a>
-              <a
-                href={site.social.linkedin}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="LinkedIn"
-                className="text-cream/60 transition-colors hover:text-brass"
-              >
-                <LinkedinIcon size={20} />
-              </a>
-            </div>
+            {socials.length > 0 ? (
+              <div className="mt-6 flex gap-4">
+                {socials.map((item) => (
+                  <a
+                    key={item.label}
+                    href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={item.label}
+                    className="text-cream/60 transition-colors hover:text-brass"
+                  >
+                    <item.icon size={20} />
+                  </a>
+                ))}
+              </div>
+            ) : null}
           </div>
 
           {/* Navegação */}
@@ -83,51 +91,61 @@ export function Footer() {
           {/* Coleções */}
           <div>
             <h3 className="text-xs uppercase tracking-[0.22em] text-brass">
-              Coleções
+              Categorias
             </h3>
             <ul className="mt-5 space-y-3 text-sm">
-              {categories.map((c) => (
-                <li key={c.slug}>
-                  <Link
-                    href={`/catalogo?categoria=${c.slug}`}
-                    className="text-cream/70 transition-colors hover:text-cream"
-                  >
-                    {c.name}
+              {categories.length === 0 ? (
+                <li>
+                  <Link href="/catalogo" className="text-cream/70 transition-colors hover:text-cream">
+                    Ver catálogos
                   </Link>
                 </li>
-              ))}
+              ) : (
+                categories.map((category) => (
+                  <li key={category.slug}>
+                    <Link
+                      href={`/catalogo?categoria=${category.slug}`}
+                      className="text-cream/70 transition-colors hover:text-cream"
+                    >
+                      {category.name}
+                    </Link>
+                  </li>
+                ))
+              )}
             </ul>
           </div>
 
-          {/* Contato */}
           <div>
             <h3 className="text-xs uppercase tracking-[0.22em] text-brass">
               Contato
             </h3>
-            <ul className="mt-5 space-y-4 text-sm">
-              <li className="flex items-start gap-3">
-                <MapPin size={18} className="mt-0.5 shrink-0 text-brass" />
-                <span className="text-cream/70">{site.address}</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Phone size={18} className="shrink-0 text-brass" />
-                <a
-                  href={`tel:${site.phone.replace(/[^\d+]/g, "")}`}
-                  className="text-cream/70 transition-colors hover:text-cream"
-                >
-                  {site.phone}
-                </a>
-              </li>
-              <li className="flex items-center gap-3">
-                <Mail size={18} className="shrink-0 text-brass" />
-                <a
-                  href={`mailto:${site.email}`}
-                  className="text-cream/70 transition-colors hover:text-cream"
-                >
-                  {site.email}
-                </a>
-              </li>
-            </ul>
+            {contacts.length === 0 ? (
+              <p className="mt-5 max-w-xs text-sm leading-relaxed text-cream/70">
+                O orçamento é solicitado no catálogo, com uma conta de comprador aprovada.
+              </p>
+            ) : (
+              <ul className="mt-5 space-y-4 text-sm">
+                {contacts.map((item) => (
+                  <li key={item.text} className="flex items-start gap-3">
+                    <item.icon size={18} className="mt-0.5 shrink-0 text-brass" />
+                    {item.href ? (
+                      <a
+                        href={item.href}
+                        {...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                        className="text-cream/70 transition-colors hover:text-cream"
+                      >
+                        {item.text}
+                      </a>
+                    ) : (
+                      <span className="text-cream/70">{item.text}</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+            <p className="mt-5 max-w-xs text-sm leading-relaxed text-cream/50">
+              O orçamento de um catálogo é pedido na página do catálogo.
+            </p>
           </div>
         </div>
 
